@@ -61,23 +61,25 @@ $ heroku config:set NGINX_ACCESS_LOG_PATH="/dev/null"
 
 nginx-buildpack provides a command named `bin/start-nginx` this command takes another command as an argument. You must pass your app server's startup command to `start-nginx`.
 
-For example, to get NGINX and Unicorn up and running:
+For example, to get NGINX and Puma up and running:
 
 ```bash
 $ cat Procfile
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx bundle exec puma
 ```
+
+Puma by default will look for a file in the `puma` directory for the applicable environment, although you can specify an environment file with `puma -C /path/to/config`
 
 #### nginx debug mode
 ```bash
 $ cat Procfile
-web: bin/start-nginx-debug bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx-debug bundle exec puma
 ```
 
 ### nginx Solo Mode
 
 nginx-buildpack provides a command named `bin/start-nginx-solo`. This is for you if you don't want to run an additional app server on the Dyno.
-This mode requires you to put a `config/nginx.conf.erb` in your app code. You can start by coping the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
+This mode requires you to put a `config/nginx.conf.erb` in your app code. You can start by copying the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
 For example, to get NGINX and Unicorn up and running:
 
 ```bash
