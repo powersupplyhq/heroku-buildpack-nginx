@@ -142,7 +142,7 @@ The buildpack will not start NGINX until a file has been written to `/tmp/app-in
 
 ## Setup
 
-Here are 2 setup examples. One example for a new app, another for an existing app. In both cases, we are working with ruby & unicorn. Keep in mind that this buildpack is not ruby specific.
+Here are 2 setup examples. One example for a new app, another for an existing app. In both cases, we are working with ruby & puma. Keep in mind that this buildpack is not ruby specific.
 
 ### Existing App
 
@@ -154,13 +154,16 @@ Alternatively, you can use the Github URL of this repo if you want to edge versi
 
 Update Procfile:
 ```
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx bundle exec puma
 ```
 ```bash
 $ git add Procfile
 $ git commit -m 'Update procfile for NGINX buildpack'
 ```
-Update Unicorn Config
+Update Puma Config
+
+For multiple workers:
+
 ```ruby
 require 'fileutils'
 listen '/tmp/nginx.socket'
@@ -169,8 +172,8 @@ before_fork do |server,worker|
 end
 ```
 ```bash
-$ git add config/unicorn.rb
-$ git commit -m 'Update unicorn config to listen on NGINX socket.'
+$ git add config/puma.rb
+$ git commit -m 'Update config to listen on NGINX socket.'
 ```
 Deploy Changes
 ```bash
@@ -183,19 +186,12 @@ $ git push heroku master
 $ mkdir myapp; cd myapp
 $ git init
 ```
-
-**Gemfile**
-```ruby
-source 'https://rubygems.org'
-gem 'unicorn'
-```
-
 **config.ru**
 ```ruby
 run Proc.new {[200,{'Content-Type' => 'text/plain'}, ["hello world"]]}
 ```
 
-**config/unicorn.rb**
+**config/puma.rb**
 ```ruby
 require 'fileutils'
 preload_app true
@@ -213,7 +209,7 @@ $ bundle install
 ```
 Create Procfile
 ```
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx bundle exec puma
 ```
 Create & Push Heroku App:
 ```bash
