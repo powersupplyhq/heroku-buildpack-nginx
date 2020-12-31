@@ -35,11 +35,26 @@ http {
 		server_name _;
 		keepalive_timeout 5;
 
-		location / {
+    location / {
 			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 			proxy_set_header Host $http_host;
 			proxy_redirect off;
 			proxy_pass http://app_server;
 		}
-	}
+
+    location /checkout/v1/ {
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+			proxy_set_header Host $http_host;
+			proxy_redirect off;
+			proxy_pass http://app_server;
+		}
+
+    location /shop/ {
+      resolver 8.8.8.8 valid=300s;
+      resolver_timeout 10s;
+
+      proxy_pass <%= ENV["CHECKOUT_APP_URL"] %>;
+			proxy_redirect off;
+		}
+  }
 }

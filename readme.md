@@ -4,12 +4,10 @@ Nginx-buildpack vendors NGINX inside a dyno and connects NGINX to an app server 
 
 ## Motivation
 
-Some application servers (e.g. Ruby's Unicorn) halt progress when dealing with network I/O. Heroku's Cedar routing stack [buffers only the headers](https://devcenter.heroku.com/articles/http-routing#request-buffering) of inbound requests. (The Cedar router will buffer the headers and body of a response up to 1MB) Thus, the Heroku router engages the dyno during the entire body transfer –from the client to dyno. For applications servers with blocking I/O, the latency per request will be degraded by the content transfer. By using NGINX in front of the application server, we can eliminate a great deal of transfer time from the application server. In addition to making request body transfers more efficient, all other I/O should be improved since the application server need only communicate with a UNIX socket on localhost. Basically, for webservers that are not designed for efficient, non-blocking I/O, we will benefit from having NGINX to handle all I/O operations.
+Some application servers (e.g. Ruby's Unicorn) halt progress when dealing with network I/O. For applications servers with blocking I/O, the latency per request will be degraded by the content transfer. By using NGINX in front of the application server, we can eliminate a great deal of transfer time from the application server. In addition to making request body transfers more efficient, all other I/O should be improved since the application server need only communicate with a UNIX socket on localhost. Basically, for webservers that are not designed for efficient, non-blocking I/O, we will benefit from having NGINX to handle all I/O operations.
 
 ## Versions
 
-### Cedar-14 (deprecated)
-* NGINX Version: 1.9.5
 ### Heroku 16
 * NGINX Version: 1.9.5
 ### Heroku 18
@@ -63,23 +61,25 @@ $ heroku config:set NGINX_ACCESS_LOG_PATH="/dev/null"
 
 nginx-buildpack provides a command named `bin/start-nginx` this command takes another command as an argument. You must pass your app server's startup command to `start-nginx`.
 
-For example, to get NGINX and Unicorn up and running:
+For example, to get NGINX and Puma up and running:
 
 ```bash
 $ cat Procfile
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx bundle exec puma
 ```
+
+Puma by default will look for a file in the `puma` directory for the applicable environment, although you can specify an environment file with `puma -C /path/to/config`
 
 #### nginx debug mode
 ```bash
 $ cat Procfile
-web: bin/start-nginx-debug bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx-debug bundle exec puma
 ```
 
 ### nginx Solo Mode
 
 nginx-buildpack provides a command named `bin/start-nginx-solo`. This is for you if you don't want to run an additional app server on the Dyno.
-This mode requires you to put a `config/nginx.conf.erb` in your app code. You can start by coping the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
+This mode requires you to put a `config/nginx.conf.erb` in your app code. You can start by copying the [sample config for nginx solo mode](config/nginx-solo-sample.conf.erb).
 For example, to get NGINX and Unicorn up and running:
 
 ```bash
@@ -142,7 +142,7 @@ The buildpack will not start NGINX until a file has been written to `/tmp/app-in
 
 ## Setup
 
-Here are 2 setup examples. One example for a new app, another for an existing app. In both cases, we are working with ruby & unicorn. Keep in mind that this buildpack is not ruby specific.
+Here are 2 setup examples. One example for a new app, another for an existing app. In both cases, we are working with ruby & puma. Keep in mind that this buildpack is not ruby specific.
 
 ### Existing App
 
@@ -154,13 +154,16 @@ Alternatively, you can use the Github URL of this repo if you want to edge versi
 
 Update Procfile:
 ```
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx bundle exec puma
 ```
 ```bash
 $ git add Procfile
 $ git commit -m 'Update procfile for NGINX buildpack'
 ```
-Update Unicorn Config
+Update Puma Config
+
+For multiple workers:
+
 ```ruby
 require 'fileutils'
 listen '/tmp/nginx.socket'
@@ -169,8 +172,8 @@ before_fork do |server,worker|
 end
 ```
 ```bash
-$ git add config/unicorn.rb
-$ git commit -m 'Update unicorn config to listen on NGINX socket.'
+$ git add config/puma.rb
+$ git commit -m 'Update config to listen on NGINX socket.'
 ```
 Deploy Changes
 ```bash
@@ -183,19 +186,12 @@ $ git push heroku master
 $ mkdir myapp; cd myapp
 $ git init
 ```
-
-**Gemfile**
-```ruby
-source 'https://rubygems.org'
-gem 'unicorn'
-```
-
 **config.ru**
 ```ruby
 run Proc.new {[200,{'Content-Type' => 'text/plain'}, ["hello world"]]}
 ```
 
-**config/unicorn.rb**
+**config/puma.rb**
 ```ruby
 require 'fileutils'
 preload_app true
@@ -213,7 +209,7 @@ $ bundle install
 ```
 Create Procfile
 ```
-web: bin/start-nginx bundle exec unicorn -c config/unicorn.rb
+web: bin/start-nginx bundle exec puma
 ```
 Create & Push Heroku App:
 ```bash
