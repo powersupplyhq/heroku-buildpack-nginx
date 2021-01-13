@@ -56,19 +56,19 @@ http {
 			proxy_redirect off;
 		}
 
-	location /blog/ {
-      		resolver 1.1.1.1 valid=30s;
-      		resolver_timeout 30s;
-      		proxy_pass https://wp.territoryfoods.com/;
-			proxy_redirect off;
-		}
-
-	location /blog {
-		resolver 1.1.1.1 valid=30s;
-		resolver_timeout 30s;
-		proxy_pass https://wp.territoryfoods.com;
-		proxy_redirect off;
-
-	}
+    location /blog/ {
+      resolver 1.1.1.1 valid=30s;
+      resolver_timeout 30s;
+      proxy_pass https://wp.territoryfoods.com/;
+      proxy_redirect off;
+    }
+    
+    # In order to prevent a 301, /blog needs to be defined explicitly
+    location /blog {
+      resolver 1.1.1.1 valid=30s;
+      resolver_timeout 30s;
+      proxy_pass https://wp.territoryfoods.com/;
+      proxy_redirect off;
+    }
   }
 }
