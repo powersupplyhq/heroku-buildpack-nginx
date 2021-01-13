@@ -55,11 +55,20 @@ http {
       		proxy_pass <%= ENV["CHECKOUT_APP_URL"] %>;
 			proxy_redirect off;
 		}
+
 	location /blog/ {
       		resolver 1.1.1.1 valid=30s;
       		resolver_timeout 30s;
       		proxy_pass https://wp.territoryfoods.com/;
 			proxy_redirect off;
 		}
+
+	location /blog {
+		resolver 1.1.1.1 valid=30s;
+		resolver_timeout 30s;
+		proxy_pass https://wp.territoryfoods.com;
+		proxy_redirect off;
+
+	}
   }
 }
